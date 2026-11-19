@@ -31,38 +31,4 @@ jobs:
           echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e" >> "$ANDROID_HOME/licenses/android-sdk-license"
           echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
 
-      - name: Install Android 16 (API 36) platform
-        run: |
-          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" || echo "sdkmanager falhou; o Gradle tentará baixar sozinho"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.13'
-
-      - name: Extract project zip (if the project was uploaded as .zip)
-        run: |
-          if [ -z "$(find . -type f \( -name 'settings.gradle.kts' -o -name 'settings_gradle.kts' \) -not -path './.git/*' | head -n1)" ]; then
-            for z in $(find . -type f -name '*.zip' -not -path './.git/*'); do
-              echo "Extraindo $z"
-              unzip -o -q "$z" -d "$(dirname "$z")/_extraido"
-            done
-          fi
-
-      - name: Locate project root
-        run: |
-          find . -type f \( -name 'settings_gradle.kts' -o -name 'build_gradle.kts' \) -not -path './.git/*' | while read -r p; do
-            d=$(dirname "$p"); b=$(basename "$p")
-            mv "$p" "$d/$(echo "$b" | sed 's/_gradle/.gradle/')"
-          done
-          S=$(find . -type f -name 'settings.gradle.kts' -not -path './.git/*' | head -n1)
-          if [ -z "$S" ]; then
-            echo "ERRO: settings.gradle.kts não encontrado. Arquivos:"
-            find . -type f -not -path './.git/*' | sort
-            exit 1
-          fi
-          echo "ROOT=$(dirname "$S")" >> "$GITHUB_ENV"
-          echo "Raiz do projeto: $(dirname "$S")"
-
-      - name: Build debug APK
-        working-directory:
+      - nam
