@@ -42,18 +42,34 @@ jobs:
         with:
           gradle-version: '8.13'
 
+      - name: Locate project root (fixes wrong file names / subfolders)
+        run: |
+          # arquivos enviados como settings_gradle.kts / build_gradle.kts -> nomes corretos
+          find . -type f \( -name 'settings_gradle.kts' -o -name 'build_gradle.kts' \) -not -path './.git/*' | while read -r p; do
+            d=$(dirname "$p"); b=$(basename "$p")
+            mv "$p" "$d/$(echo "$b" | sed 's/_gradle/.gradle/')"
+          done
+          S=$(find . -type f -name 'settings.gradle.kts' -not -path './.git/*' | head -n1)
+          if [ -z "$S" ]; then
+            echo "ERRO: settings.gradle.kts não encontrado no repositório. Arquivos:"
+            find . -type f -not -path './.git/*' | sort
+            exit 1
+          fi
+          echo "ROOT=$(dirname "$S")" >> "$GITHUB_ENV"
+          echo "Raiz do projeto: $(dirname "$S")"
+
       - name: Build debug APK
+        working-directory: ${{ env.ROOT }}
         run: gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Futebol2D-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: ${{ env.ROOT }}/app/build/outputs/apk/debug/*.apk
 
       - name: Publish release (tags v*)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/*.apk
-          
+          files: ${{ env.ROOT }}/app/build/outputs/apk/debug/*.apk
